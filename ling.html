@@ -1,0 +1,259 @@
+<html lang="zh-CN<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0灵<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  background: #101013;
+  color: #e6d5b8;
+  font-family: "PingFang SC", "Microsoft YaHei", serif;
+  background-image: url("https://www.transparenttextures.com/patterns/old-paper.png");
+  background-blend-mode: overlay;
+  padding: 15px;
+  min-height: 100vh;
+}
+.container {
+  max-width: 680px;
+  margin: 0 auto;
+}
+.title {
+  text-align: center;
+  font-size: 26px;
+  letter-spacing: 6px;
+  color: #d4af37;
+  margin: 10px 0 20px;
+  text-shadow: 0 0 8px #9a3820;
+}
+.status-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.status {
+  flex: 1;
+  background: rgba(20,15,10,0.8);
+  border: 1px solid #9a3820;
+  border-radius: 6px;
+  padding: 8px;
+  text-align: center;
+}
+.label {
+  font-size: 12px;
+  color: #c0b298;
+}
+.value {
+  font-size: 17px;
+  font-weight: bold;
+  color: #e6d5b8;
+}
+.story-box {
+  background: rgba(20,15,10,0.7);
+  border: 1px solid #9a3820;
+  border-radius: 8px;
+  padding: 20px;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  animation: fadeIn 0.6s ease forwards;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.story-text {
+  font-size: 16px;
+  line-height: 1.8;
+  text-align: left;
+  white-space: pre-line;
+  width: 100%;
+}
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 15px;
+}
+.choice-btn {
+  background: #9a3820;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 13px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.choice-btn:hover {
+  background: #c44e2f;
+  transform: translateX(3px);
+}
+.tip {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 14px;
+  color: #c0b298;
+  opacity: 0.8</style</head>
+<div class="<div class="title">灵<div class="status-bar">
+<div class="status<div class</div<div id="day" class="value</div>
+</div>
+   <div class="status"><div class="</div<div id="power" class="value</div</div></div>
+
+<div class="story<div id="text" class="story-text">点击屏幕开始</div>
+  </div>
+
+  <div class="choices" id</div>
+<div class="tip</div</div>
+
+<script>
+const dayEl = document.getElementById('day');
+const powerEl = document.getElementById('power');
+const textEl = document.getElementById('text');
+const choicesEl = document.getElementById('choices');
+const tipEl = document.getElementById('tip');
+
+let day = 1;
+let power = 100;
+let step = 0;
+let isChoosing = false;
+
+// 剧情数组：严格保留原文，A/B分支完全分离，无串线
+const story = [
+  // 第一段剧情
+  {
+    text: "风停了，你看着躺在一片落叶丛里的\"母亲\"，轻声对她说晚安。于是世界又安静下来，你百无聊赖地躺在她身侧，像哺乳期的幼崽寻求着一个温暖的怀抱。"
+  },
+  // 第二段剧情
+  {
+    text: "抬起头数到第十六颗星星时，你听到山脚下传来躁动声，飞鸟掠过你头顶，你远远望去，看到与你长相相似的一群小动物经过。"
+  },
+  // 第一次选择：保留上一段文本，不替换
+  {
+    isChoice: true,
+    options: [
+      { text: "去看看小动物们", next: 3 },
+      { text: "还是留在母亲身边吧", next: 4 }
+    ]
+  },
+  // A选项专属剧情
+  {
+    text: "你再次回头看了一眼还在沉睡的\"母亲\"，轻手轻脚的飞掠下山，跟在那群小动物身后。"
+  },
+  // B选项专属剧情
+  {
+    text: "你盯着那张恬静的女子侧脸发呆，山脚下传来与此处格格不入的嘈杂声，你最后还是没按耐住好奇心，偷偷溜了下去。"
+  },
+  // AB共同主线1
+  {
+    text: "小动物们有些骑着马，有些装在结构复杂花纹精致的木头里，你一路上好奇地打量，边听边看，只用了半个夜晚便大致理解了他们的语言。"
+  },
+  {
+    text: "原来是母亲之前提到的人类啊。你想。和我们真的长得很像呢。"
+  },
+  {
+    text: "马上就要到宽阔的大路上了。也许我等他们离开树林后就得回到母亲身边了。你想。"
+  },
+  {
+    text: "突然，破空声打破清晨的寂静，你听见撕心裂肺地叫喊，马嘶鸣着不安地在原地踱步，身穿黑衣面上有浓须的几个高头大马的人窜出来拦路，两拨人马相撞，血腥味迅速传到你身周。"
+  },
+  // 第二次选择：保留上一段文本，不替换
+  {
+    isChoice: true,
+    options: [
+      { text: "跑出去试图阻止", next: 10 },
+      { text: "暗中帮帮他们", next: 13 }
+    ]
+  },
+  // 第二次A选项专属剧情（无B内容）
+  {
+    text: "你只是轻轻一提气，便瞬间出现在两队人马之间，你努力回想着\"母亲\"身边流转的元素能量，靠着山林里充裕的木元素将刺客们用藤蔓抽飞。"
+  },
+  {
+    text: "刺客们见情况不对，立马开始逃窜，身后马车旁的人想追，看见你神色淡淡地立在原地便也不敢再轻举妄动。"
+  },
+  {
+    text: "一切尘埃落定后，你听见身后的马车里走出来一位穿着华贵的年轻男子，他朝你鞠躬拱手。"
+  },
+  // 第二次B选项专属剧情（无A内容）
+  {
+    text: "你伸手抚上旁边树木上垂下的叶片，刺客们被突然冒出的土墙挡住，惊诧之下对视一眼，迅速往后退去。"
+  },
+  {
+    text: "马车旁的人一阵骚动后又安静下来，有一位看起来从容镇定的男子从马车里走出，对着前方道路拱手，高声喊到：\"感谢高人相助，可否一见？\""
+  },
+  {
+    text: "你纠结的用手抠树皮，最后好奇心战胜了谨慎，你走了出去。"
+  },
+  // AB共同主线2
+  {
+    text: "男子冲你露出一个得体的笑容：\"我们几人是秦国的商贩，得仙人所救实乃大幸！不知仙人如何称呼？\""
+  },
+  {
+    text: "你歪了歪脑袋，不知道他在说什么。对方自觉自己失礼，连忙赔罪，吩咐仆从递上一个古朴精致的饰品盒，打开瞬间你便被里面晶莹剔透的宝石与璀璨的金银晃了眼睛。"
+  },
+  {
+    text: "男子双手奉上这份谢礼，看你迟迟不收，忐忑又小心翼翼的抬头。"
+  },
+  {
+    text: "\"你们要去哪？\"你说。"
+  },
+  {
+    text: "\"回到秦国，仙人。\"他恭敬回答，弯腰的姿势未变半分。"
+  },
+  {
+    text: "\"我可以跟你们一起吗？\"蓝发的仙人俯视着面前渺小的，卑微的人类。"
+  }
+];
+
+// 更新状态面板
+function updateStatus() {
+  dayEl.textContent = day;
+  powerEl.textContent = power;
+}
+
+// 渲染剧情/选项
+function render() {
+  const current = story[step];
+  tipEl.textContent = "";
+  choicesEl.innerHTML = "";
+
+  if (current.isChoice) {
+    // 选择状态：保留上一段剧情文本，显示选项
+    isChoosing = true;
+    current.options.forEach(option => {
+      const btn = document.createElement("button");
+      btn.className = "choice-btn";
+      btn.textContent = option.text;
+      btn.onclick = () => {
+        isChoosing = false;
+        step = option.next;
+        render();
+      };
+      choicesEl.appendChild(btn);
+    });
+  } else {
+    // 剧情状态：显示当前剧情文本
+    textEl.textContent = current.text;
+    tipEl.textContent = "点击屏幕继续";
+    isChoosing = false;
+  }
+  updateStatus();
+}
+
+// 点击翻页逻辑
+document.addEventListener("click", () => {
+  if (isChoosing) return;
+  if (step >= story.length - 1) {
+    textEl.textContent = "剧情已完结";
+    tipEl.textContent = "";
+    return;
+  }
+  step++;
+  render();
+});
+
+// 初始化
+window.onload</script</body>
+</html>
